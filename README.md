@@ -27,5 +27,5 @@ persistence:
 ```
 
 when `enabled` is `false` use `emptyDir`,
-1、If has created `pvc`, Please change `enabled` to `true`, and change`existPersistClaim`to your `pvc` name
-2、If `enabled` is `true` but `existPersistClaim` is empty,if will create a new `pvc` by `accessMode` `storageClass` `size`
+1. If has created `pvc`, Please change `enabled` to `true`, and change`existPersistClaim`to your `pvc` name.
+2. If `enabled` is `true` but `existPersistClaim` is empty,if will create a new `pvc` by `accessMode` `storageClass` `size`
