@@ -1,0 +1,42 @@
+name: Publish Helm chart (gh-pages)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  release:
+    name: Package and publish charts to gh-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        run: |
+          set -eux
+          HELM_VERSION=3.12.0
+          curl -fsSL https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz -o helm.tar.gz
+          tar -xzf helm.tar.gz
+          sudo mv linux-amd64/helm /usr/local/bin/helm
+          rm -rf linux-amd64 helm.tar.gz
+
+      - name: Package chart
+        run: |
+          rm -rf dist
+          mkdir -p dist
+          helm package . -d dist
+
+      - name: Compute charts repo URL
+        run: |
+          # Compute the GitHub Pages URL for this repository and export to the environment
+          REPO_NAME=${GITHUB_REPOSITORY##*/}
+          echo "CHARTS_REPO_URL=https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO_NAME}/" >> $GITHUB_ENV
+
+      - name: Publish charts to GitHub Pages (gh-pages)
+        uses: helm/chart-releaser-action@v1
+        with:
+          charts_dir: dist
+          release_branch: gh-pages
+          charts_repo_url: ${{ github.event.inputs.charts_repo_url }}
+        env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
