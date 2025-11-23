@@ -22,3 +22,18 @@ version: 0.2.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 appVersion: "0.25.2"
+home: https://github.com/usememos/helm
+sources:
+	- https://github.com/usememos/memos
+	- https://github.com/usememos/helm
+keywords:
+	- memos
+	- notes
+	- helm
+maintainers:
+	- name: usememos
+		email: usememos@gmail.com
+icon: https://raw.githubusercontent.com/usememos/dotcom/main/public/logo.png
+annotations:
+	artifacthub.io/changes: https://github.com/usememos/helm/blob/main/CHANGELOG.md
+	artifacthub.io/categories: "Productivity"
