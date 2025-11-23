@@ -38,4 +38,5 @@ jobs:
           helm chart push "$CHART_REF"
 
       - name: Output published reference
-        run: echo "Published chart: ghcr.io/${{ github.repository_owner }}/memos:${{ env.VERSION }}"
+        run: |
+          echo "Published chart: ghcr.io/${{ github.repository_owner }}/memos:${{ env.VERSION }}"
