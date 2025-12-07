@@ -1,0 +1,14 @@
+# See https://editorconfig.org/ for details on how to configure your editor to respect these settings.
+
+# This is the terminal .editorconfig in this repository.
+root = true
+
+# all files
+[*]
+indent_style = space
+trim_trailing_whitespace = true
+insert_final_newline = true
+end_of_line = lf
+
+[*.{yaml,yml}]
+indent_size = 2

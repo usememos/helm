@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2025-12-07
+
+### Fixed
+- Eliminate tabs in Chart.yaml to fix yaml errors
+
 ## [0.2.0] - 2025-11-23
 
 ### Changed
