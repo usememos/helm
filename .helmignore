@@ -23,3 +23,8 @@
 .vscode/
 # CHANGELOG
 CHANGELOG.md
+# GitHub Actions
+.github/
+# configuration and build files
+.editorconfig
+Makefile

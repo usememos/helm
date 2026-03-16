@@ -20,6 +20,10 @@ jobs:
           sudo mv linux-amd64/helm /usr/local/bin/helm
           rm -rf linux-amd64 helm.tar.gz
 
+      - name: Lint chart
+        run: |
+          helm lint .
+
       - name: Package chart
         run: |
           rm -rf dist

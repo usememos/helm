@@ -15,7 +15,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.2.0
+version: 0.2.1
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -24,16 +24,16 @@ version: 0.2.0
 appVersion: "0.25.2"
 home: https://github.com/usememos/helm
 sources:
-	- https://github.com/usememos/memos
-	- https://github.com/usememos/helm
+  - https://github.com/usememos/memos
+  - https://github.com/usememos/helm
 keywords:
-	- memos
-	- notes
-	- helm
+  - memos
+  - notes
+  - helm
 maintainers:
-	- name: usememos
-		email: usememos@gmail.com
+  - name: usememos
+    email: usememos@gmail.com
 icon: https://raw.githubusercontent.com/usememos/dotcom/main/public/logo.png
 annotations:
-	artifacthub.io/changes: https://github.com/usememos/helm/blob/main/CHANGELOG.md
-	artifacthub.io/categories: "Productivity"
+  artifacthub.io/changes: https://github.com/usememos/helm/blob/main/CHANGELOG.md
+  artifacthub.io/categories: "Productivity"
