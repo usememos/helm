@@ -1,3 +1,13 @@
+{{- if eq .Values.database.driver "postgres" }}
+  {{- if and (not .Values.database.postgres.dsn) (not .Values.database.postgres.existingSecret) }}
+    {{- fail "database.postgres.dsn or database.postgres.existingSecret must be set" }}
+  {{- end }}
+{{- else if eq .Values.database.driver "mysql" }}
+  {{- if and (not .Values.database.mysql.dsn) (not .Values.database.mysql.existingSecret) }}
+    {{- fail "database.mysql.dsn or database.mysql.existingSecret must be set" }}
+  {{- end }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -66,7 +76,7 @@ spec:
             {{- if eq .Values.database.driver "postgres" }}
             {{- if .Values.database.postgres.dsn }}
             - name: MEMOS_DSN
-              value: {{ .Values.database.postgres.dsn }}
+              value: {{ .Values.database.postgres.dsn | quote }}
             {{- else if .Values.database.postgres.existingSecret }}
             - name: MEMOS_DSN
               valueFrom:
@@ -78,7 +88,7 @@ spec:
             {{- if eq .Values.database.driver "mysql" }}
             {{- if .Values.database.mysql.dsn }}
             - name: MEMOS_DSN
-              value: {{ .Values.database.mysql.dsn }}
+              value: {{ .Values.database.mysql.dsn | quote }}
             {{- else if .Values.database.mysql.existingSecret }}
             - name: MEMOS_DSN
               valueFrom:

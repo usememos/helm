@@ -57,7 +57,7 @@ When `persistence.enabled` is `false` use `emptyDir`,
 database:
   driver: mysql # or postgres
   
-  postgres:
+  mysql:
     dsn: "memos_user:password@tcp(db:3306)/memos?charset=utf8mb4&parseTime=True&loc=Local"
     existingSecret: ""
     # If it is empty, `database-dsn` key will be used.
