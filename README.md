@@ -32,19 +32,38 @@ image:
 
 Edit `values.yaml`
 
+### Using SQLite
 ```yaml
-persistence:
-  ## If enabled is False, emptyDir will be used, data may be lost after Pod rebuild, it is recommended to use persistent volume
-  enabled: false
-  storageClass: "local"
-  existPersistClaim: ""
-  accessMode: ReadWriteOnce
-  size: 10Gi
+database:
+  driver: sqlite
+  
+  sqlite:
+    persistence:
+      # If enabled is False, emptyDir will be used, data may be lost after Pod rebuild, it is recommended to use persistent volume
+      enabled: true
+      existingClaim: ""
+      storageClass: ""
+      accessMode: ReadWriteOnce
+      size: 10Gi
 ```
 
-when `enabled` is `false` use `emptyDir`,
-1. If has created `pvc`, Please change `enabled` to `true`, and change`existPersistClaim`to your `pvc` name.
-2. If `enabled` is `true` but `existPersistClaim` is empty,if will create a new `pvc` by `accessMode` `storageClass` `size`
+When `persistence.enabled` is `false` use `emptyDir`,
+1. If has created `pvc`, Please change `persistence.enabled` to `true`, and change`existingClaim`to your `pvc` name.
+2. If `persistence.enabled` is `true` but `existingClaim` is empty,if will create a new `pvc` by `accessMode` `storageClass` `size`
+
+### Using MySQL / Postgres
+
+```yaml
+database:
+  driver: mysql # or postgres
+  
+  mysql:
+    dsn: "memos_user:password@tcp(db:3306)/memos?charset=utf8mb4&parseTime=True&loc=Local"
+    existingSecret: ""
+    # If it is empty, `database-dsn` key will be used.
+    existingSecretKey: ""
+```
+Please refer to the Memos Configuration for the DSN value.
 
 ## Security
 

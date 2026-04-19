@@ -1,3 +1,13 @@
+{{- if eq .Values.database.driver "postgres" }}
+  {{- if and (not .Values.database.postgres.dsn) (not .Values.database.postgres.existingSecret) }}
+    {{- fail "database.postgres.dsn or database.postgres.existingSecret must be set" }}
+  {{- end }}
+{{- else if eq .Values.database.driver "mysql" }}
+  {{- if and (not .Values.database.mysql.dsn) (not .Values.database.mysql.existingSecret) }}
+    {{- fail "database.mysql.dsn or database.mysql.existingSecret must be set" }}
+  {{- end }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,12 +40,12 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
         - name: memos-data
-        {{- if .Values.persistence.enabled }}
+          {{- if and (eq .Values.database.driver "sqlite") .Values.database.sqlite.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ .Values.persistence.existPersistClaim | default (include "memos.fullname" .) }}
-        {{- else }}
+            claimName: {{ .Values.database.sqlite.persistence.existingClaim | default (include "memos.fullname" .) }}
+          {{- else }}
           emptyDir: { }
-        {{ end }}
+          {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -61,6 +71,32 @@ spec:
           env:
             - name: MEMOS_PORT
               value: "{{ .Values.service.port }}"
+            - name: MEMOS_DRIVER
+              value: {{ .Values.database.driver }}
+            {{- if eq .Values.database.driver "postgres" }}
+            {{- if .Values.database.postgres.dsn }}
+            - name: MEMOS_DSN
+              value: {{ .Values.database.postgres.dsn | quote }}
+            {{- else if .Values.database.postgres.existingSecret }}
+            - name: MEMOS_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.postgres.existingSecret }}
+                  key: {{ .Values.database.postgres.existingSecretKey | default "database-dsn" }}
+            {{- end }}
+            {{- end }}
+            {{- if eq .Values.database.driver "mysql" }}
+            {{- if .Values.database.mysql.dsn }}
+            - name: MEMOS_DSN
+              value: {{ .Values.database.mysql.dsn | quote }}
+            {{- else if .Values.database.mysql.existingSecret }}
+            - name: MEMOS_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.mysql.existingSecret}}
+                  key: {{ .Values.database.mysql.existingSecretKey | default "database-dsn" }}
+            {{- end }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
