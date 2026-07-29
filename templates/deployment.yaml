@@ -36,6 +36,9 @@ spec:
         {{- else }}
           emptyDir: { }
         {{ end }}
+        - name: settings
+          configMap:
+            name: usememos-settings
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -57,10 +60,32 @@ spec:
           volumeMounts:
             - name: memos-data
               mountPath: /var/opt/memos
+            - name: settings
+              mountPath: /etc/secrets
+              readOnly: true
           # avoid * cannot parse 'Port' as int: strconv.ParseInt: parsing "tcp://10.233.40.219:5230": invalid syntax
           env:
             - name: MEMOS_PORT
               value: "{{ .Values.service.port }}"
+            - name: MEMOS_LOG_LEVEL
+              value: {{ .Values.instance.logLevel | quote }}
+            - name: MEMOS_DRIVER
+              value: {{ .Values.database.driver | quote }}
+            {{- if .Values.database.connectionString }}
+            - name: MEMOS_DSN
+              value: {{ .Values.database.connectionString }}
+            {{- end }}
+            {{- if .Values.database.existingSecret }}
+            - name: MEMOS_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret.name }}
+                  key: {{ .Values.database.existingSecret.key }}
+            {{- end }}
+            {{- if .Values.instance.url }}
+            - name: MEMOS_INSTANCE_URL
+              value: {{ .Values.instance.url }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

@@ -24,6 +24,21 @@ persistence:
   accessMode: ReadWriteOnce
   size: 10Gi
 
+instance:
+  # Public instance URL, e.g. https://memos.example.com; empty enables private
+  url: ""
+  # Log verbosity (debug, info, warn, error)
+  logLevel: "info"
+
+database:
+  # sqlite, mysql, postgres
+  driver: sqlite
+  # define database connection string or use an existing secret (recommended)
+  connectionString: ""
+  # existingSecret:
+  #   name:
+  #   key:
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
