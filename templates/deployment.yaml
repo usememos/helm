@@ -14,8 +14,9 @@ spec:
       {{- include "memos.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/settings: {{ include (print $.Template.BasePath "/settings.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -35,10 +36,12 @@ spec:
             claimName: {{ .Values.persistence.existPersistClaim | default (include "memos.fullname" .) }}
         {{- else }}
           emptyDir: { }
-        {{ end }}
+        {{- end }}
+        {{- if .Values.settings.enabled }}
         - name: settings
           configMap:
-            name: usememos-settings
+            name: {{ include "memos.fullname" . }}
+        {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -60,9 +63,11 @@ spec:
           volumeMounts:
             - name: memos-data
               mountPath: /var/opt/memos
+            {{- if .Values.settings.enabled }}
             - name: settings
               mountPath: /etc/secrets
               readOnly: true
+            {{- end }}
           # avoid * cannot parse 'Port' as int: strconv.ParseInt: parsing "tcp://10.233.40.219:5230": invalid syntax
           env:
             - name: MEMOS_PORT

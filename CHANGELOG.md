@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [0.3.0] - to be released
 - Support for memos version 0.30.0
 - Add HTTPRoute support
+- Support Deployment-Managed Configuration
 
 ## [0.2.1] - 2025-12-07
 

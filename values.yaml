@@ -39,6 +39,15 @@ database:
   #   name:
   #   key:
 
+settings:
+  enabled: false
+  general: {}
+  idps: []
+  storage: {}
+  memo: {}
+  notification: {}
+  ai: {}
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
