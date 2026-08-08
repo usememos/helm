@@ -1,7 +1,8 @@
+{{- $fullName := include "memos.fullname" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "memos.fullname" . }}
+  name: {{ $fullName }}
   labels:
     {{- include "memos.labels" . | nindent 4 }}
 spec:
@@ -33,14 +34,26 @@ spec:
         - name: memos-data
         {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ .Values.persistence.existPersistClaim | default (include "memos.fullname" .) }}
+            claimName: {{ .Values.persistence.existPersistClaim | default ($fullName) }}
         {{- else }}
           emptyDir: { }
         {{- end }}
-        {{- if .Values.settings.enabled }}
-        - name: settings
+        {{- range $key, $section := .Values.settings }}
+        {{- $hasConfig := and (hasKey $section "config") (not (empty $section.config)) }}
+        {{- $hasSecret := and (hasKey $section "existingSecret") (not (empty $section.existingSecret)) }}
+        {{- if or $hasConfig $hasSecret }}
+        - name: setting-{{ $key }}
+        {{- if $section.config }}
           configMap:
-            name: {{ include "memos.fullname" . }}
+            name: {{ $fullName -}}-{{- $key }}
+        {{- else if $section.existingSecret }}
+          secret:
+            secretName: {{ $section.existingSecret }}
+        {{- end }}
+            items:
+              - key: setting
+                path: setting
+        {{- end }}
         {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -63,10 +76,21 @@ spec:
           volumeMounts:
             - name: memos-data
               mountPath: /var/opt/memos
-            {{- if .Values.settings.enabled }}
-            - name: settings
-              mountPath: /etc/secrets
+            {{- range $key, $section := .Values.settings }}
+            {{- $hasConfig := and (hasKey $section "config") (not (empty $section.config)) }}
+            {{- $hasSecret := and (hasKey $section "existingSecret") (not (empty $section.existingSecret)) }}
+            {{- if or $hasConfig $hasSecret }}
+            {{- $fn := "" -}}
+            {{- if hasPrefix "idp-" $key -}}
+              {{- $fn = printf "memos-%s.json" $key -}}
+            {{- else -}}
+              {{- $fn = printf "memos-instance-setting-%s.json" $key -}}
+            {{- end }}
+            - name: setting-{{ $key }}
+              mountPath: /etc/secrets/{{- $fn }}
+              subPath: setting
               readOnly: true
+            {{- end }}
             {{- end }}
           # avoid * cannot parse 'Port' as int: strconv.ParseInt: parsing "tcp://10.233.40.219:5230": invalid syntax
           env:

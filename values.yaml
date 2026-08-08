@@ -40,13 +40,30 @@ database:
   #   key:
 
 settings:
-  enabled: false
-  general: {}
-  idps: []
-  storage: {}
-  memo: {}
-  notification: {}
-  ai: {}
+  # See https://usememos.com/docs/configuration/deployment-configuration#general
+  general:
+    config: {}
+    existingSecret: null
+  # See https://usememos.com/docs/configuration/deployment-configuration#oauth2-identity-provider
+  #   idp-<oidc-client-name>:
+  #     config: {}
+  #     existingSecret:
+  # See https://usememos.com/docs/configuration/deployment-configuration#storage
+  storage:
+    config: {}
+    existingSecret: null
+  # See https://usememos.com/docs/configuration/deployment-configuration#memo-behavior
+  memo:
+    config: {}
+    existingSecret: null
+  # See https://usememos.com/docs/configuration/deployment-configuration#ai-providers
+  notification:
+    config: {}
+    existingSecret: null
+  # See https://usememos.com/docs/configuration/deployment-configuration#ai-providers
+  ai:
+    config: {}
+    existingSecret: ""
 
 serviceAccount:
   # Specifies whether a service account should be created

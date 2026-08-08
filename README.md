@@ -66,69 +66,91 @@ Edit `values.yaml`
 
 ```yaml
 settings:
-  enabled: true
   general:
+    config:
+      {
+        "key": "GENERAL",
+        "generalSetting":
+          {
+            "disallowUserRegistration": false,
+            "disallowPasswordAuth": false,
+            "additionalScript": "",
+            "additionalStyle": "",
+            "weekStartDayOffset": 1,
+            "disallowChangeUsername": false,
+            "disallowChangeNickname": false
+          }
+      }
+```
+The [configuration](https://usememos.com/docs/configuration/deployment-configuration) is generated in `/etc/secrets`.
+
+All configuration resources are supported. Use either config or an existing secret.
+
+```yaml
+settings:
+  general:
+    config: {}
+    existingSecret: ""
+  idp-<uid>:
+    config: {}
+    existingSecret: ""
+  storage:
+    config: {}
+    existingSecret: ""
+  memo:
+    config: {}
+    existingSecret: ""
+  notification:
+    config: {}
+    existingSecret: ""
+  ai:
+    config: {}
+    existingSecret: ""
+```
+
+An existing secret must have one key named `setting` which contains the configuration as JSON.
+As example for an OAuth2 identity provider named `primary-sso` create a secret similar to:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: primary-sso-secret
+type: Opaque
+stringData:
+  setting: >
     {
-      "key": "GENERAL",
-      "generalSetting":
-        {
-          "disallowUserRegistration": false,
-          "disallowPasswordAuth": false,
-          "additionalScript": "",
-          "additionalStyle": "",
-          "weekStartDayOffset": 1,
-          "disallowChangeUsername": false,
-          "disallowChangeNickname": false,
-        },
+      "uid": "primary-sso",
+      "name": "Company SSO",
+      "type": "OAUTH2",
+      "identifierFilter": "",
+      "config": {
+        "oauth2Config": {
+          "clientId": "client-id",
+          "clientSecret": "client-secret",
+          "authUrl": "https://idp.example.com/oauth/authorize",
+          "tokenUrl": "https://idp.example.com/oauth/token",
+          "userInfoUrl": "https://idp.example.com/oauth/userinfo",
+          "scopes": ["openid", "profile", "email"],
+          "fieldMapping": {
+            "identifier": "sub",
+            "displayName": "name",
+            "email": "email",
+            "avatarUrl": "picture"
+          }
+        }
+      }
     }
 ```
 
-when `enabled` is `true` the [configuration](https://usememos.com/docs/configuration/deployment-configuration) is generated in `/etc/secrets`.
-
-All configuration resources are supported.
+and define in `values.yaml`:
 
 ```yaml
 settings:
-  enabled: false
-  general: {}
-  idps: []
-  storage: {}
-  memo: {}
-  notification: {}
-  ai: {}
+  idp-primary-sso:
+    existingSecret: primary-sso-secret
 ```
 
-For OAuth2 identity provider use for example:
-
-```yaml
-settings:
-  enabled: true
-  idps:
-    - name: primary-sso
-      config:
-        {
-          "uid": "primary-sso",
-          "name": "Company SSO",
-          "type": "OAUTH2",
-          "identifierFilter": "",
-          "config": {
-            "oauth2Config": {
-              "clientId": "client-id",
-              "clientSecret": "client-secret",
-              "authUrl": "https://idp.example.com/oauth/authorize",
-              "tokenUrl": "https://idp.example.com/oauth/token",
-              "userInfoUrl": "https://idp.example.com/oauth/userinfo",
-              "scopes": ["openid", "profile", "email"],
-              "fieldMapping": {
-                "identifier": "sub",
-                "displayName": "name",
-                "email": "email",
-                "avatarUrl": "picture"
-              }
-            }
-          }
-        }
-```
 
 ## Security
 

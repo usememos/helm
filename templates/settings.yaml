@@ -1,35 +1,22 @@
-{{- if .Values.settings.enabled -}}
+{{- if .Values.settings -}}
+{{- $fullName := include "memos.fullname" . -}}
+{{- $labels := include "memos.labels" . | nindent 4 -}}
+{{- range $key, $section := .Values.settings }}
+{{- $hasConfig := and (hasKey $section "config") (not (empty $section.config)) }}
+{{- $hasSecret := and (hasKey $section "existingSecret") (not (empty $section.existingSecret)) }}
+{{- if and $hasConfig $hasSecret }}
+  {{ fail (printf "Setting '%s' requires either config or existingSecret, not both" $key) }}
+{{- else if $hasConfig }}
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "memos.fullname" . }}
+  name: {{ $fullName -}}-{{- $key }}
   labels:
-    {{- include "memos.labels" . | nindent 4 }}
+    {{- $labels }}
 data:
-{{- if .Values.settings.general }}
-  memos-instance-setting-general.json: >
-  {{- .Values.settings.general | toJson | nindent 4 }}
+  setting: >
+  {{- $section.config | toJson | nindent 4 -}}
 {{- end }}
-{{- if .Values.settings.idps }}
-{{- range $idp := .Values.settings.idps }}
-  memos-idp-{{- $idp.name -}}.json: >
-  {{- $idp.config | toJson | nindent 4 }}
-{{- end }}
-{{- end }}
-{{- if .Values.settings.storage }}
-  memos-instance-setting-storage.json: >
-  {{- .Values.settings.storage | toJson | nindent 4 }}
-{{- end }}
-{{- if .Values.settings.memo }}
-  memos-instance-setting-memo-related.json: >
-  {{- .Values.settings.memo | toJson | nindent 4 }}
-{{- end }}
-{{- if .Values.settings.notification }}
-  memos-instance-setting-notification.json: >
-  {{- .Values.settings.notification | toJson | nindent 4 }}
-{{- end }}
-{{- if .Values.settings.ai }}
-  memos-instance-setting-ai.json: >
-  {{- .Values.settings.ai | toJson | nindent 4 }}
 {{- end }}
 {{- end }}
