@@ -76,16 +76,15 @@ spec:
               value: {{ .Values.instance.logLevel | quote }}
             - name: MEMOS_DRIVER
               value: {{ .Values.database.driver | quote }}
-            {{- if .Values.database.connectionString }}
-            - name: MEMOS_DSN
-              value: {{ .Values.database.connectionString }}
-            {{- end }}
             {{- if .Values.database.existingSecret }}
             - name: MEMOS_DSN
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.database.existingSecret.name }}
                   key: {{ .Values.database.existingSecret.key }}
+            {{- else if .Values.database.connectionString }}
+            - name: MEMOS_DSN
+              value: {{ .Values.database.connectionString }}
             {{- end }}
             {{- if .Values.instance.url }}
             - name: MEMOS_INSTANCE_URL

@@ -50,13 +50,13 @@ when `enabled` is `false` use `emptyDir`,
 
 Edit `values.yaml`
 
-~~~yaml
+```yaml
 database:
   driver: postgres
   existingSecret:
     name: memos-cluster-app
     key: fqdn-uri
-~~~
+```
 
 [Databases](https://usememos.com/docs/configuration/database) configuration can be done with an existing secret (recommended) or by a `database.connectionString`.
 
@@ -64,7 +64,7 @@ database:
 
 Edit `values.yaml`
 
-~~~yaml
+```yaml
 settings:
   enabled: true
   general:
@@ -81,13 +81,13 @@ settings:
           "disallowChangeNickname": false,
         },
     }
-~~~
+```
 
 when `enabled` is `true` the [configuration](https://usememos.com/docs/configuration/deployment-configuration) is generated in `/etc/secrets`.
 
 All configuration resources are supported.
 
-~~~yaml
+```yaml
 settings:
   enabled: false
   general: {}
@@ -96,11 +96,11 @@ settings:
   memo: {}
   notification: {}
   ai: {}
-~~~
+```
 
 For OAuth2 identity provider use for example:
 
-~~~yaml
+```yaml
 settings:
   enabled: true
   idps:
@@ -128,7 +128,7 @@ settings:
             }
           }
         }
-~~~
+```
 
 ## Security
 
