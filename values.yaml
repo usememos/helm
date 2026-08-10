@@ -9,7 +9,7 @@ image:
   imageName: usememos/memos
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
@@ -23,6 +23,47 @@ persistence:
   existPersistClaim: ""
   accessMode: ReadWriteOnce
   size: 10Gi
+
+instance:
+  # Public instance URL, e.g. https://memos.example.com; empty enables private
+  url: ""
+  # Log verbosity (debug, info, warn, error)
+  logLevel: "info"
+
+database:
+  # sqlite, mysql, postgres
+  driver: sqlite
+  # define database connection string or use an existing secret (recommended)
+  connectionString: ""
+  # existingSecret:
+  #   name:
+  #   key:
+
+settings:
+  # See https://usememos.com/docs/configuration/deployment-configuration#general
+  general:
+    config: {}
+    existingSecret: null
+  # See https://usememos.com/docs/configuration/deployment-configuration#oauth2-identity-provider
+  #   idp-<oidc-client-name>:
+  #     config: {}
+  #     existingSecret:
+  # See https://usememos.com/docs/configuration/deployment-configuration#storage
+  storage:
+    config: {}
+    existingSecret: null
+  # See https://usememos.com/docs/configuration/deployment-configuration#memo-behavior
+  memo:
+    config: {}
+    existingSecret: null
+  # See https://usememos.com/docs/configuration/deployment-configuration#ai-providers
+  notification:
+    config: {}
+    existingSecret: null
+  # See https://usememos.com/docs/configuration/deployment-configuration#ai-providers
+  ai:
+    config: {}
+    existingSecret: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -70,6 +111,37 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs:
+  - name: gateway
+    sectionName: http
+    # namespace: default
+  # hostnames:
+  # - chart-example.local
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+  #   filters:
+  #   - type: RequestHeaderModifier
+  #     requestHeaderModifier:
+  #       set:
+  #       - name: My-Overwrite-Header
+  #         value: this-is-the-only-value
+  #       remove:
+  #       - User-Agent
+  # - matches:
+  #   - path:
+  #       type: PathPrefix
+  #       value: /echo
+  #     headers:
+  #     - name: version
+  #       value: v2
+
 
 resources:
   limits:

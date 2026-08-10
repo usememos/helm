@@ -1,0 +1,22 @@
+{{- if .Values.settings -}}
+{{- $fullName := include "memos.fullname" . -}}
+{{- $labels := include "memos.labels" . | nindent 4 -}}
+{{- range $key, $section := .Values.settings }}
+{{- $hasConfig := and (hasKey $section "config") (not (empty $section.config)) }}
+{{- $hasSecret := and (hasKey $section "existingSecret") (not (empty $section.existingSecret)) }}
+{{- if and $hasConfig $hasSecret }}
+  {{ fail (printf "Setting '%s' requires either config or existingSecret, not both" $key) }}
+{{- else if $hasConfig }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $fullName -}}-{{- $key }}
+  labels:
+    {{- $labels }}
+data:
+  setting: >
+  {{- $section.config | toJson | nindent 4 -}}
+{{- end }}
+{{- end }}
+{{- end }}

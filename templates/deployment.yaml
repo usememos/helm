@@ -1,7 +1,8 @@
+{{- $fullName := include "memos.fullname" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "memos.fullname" . }}
+  name: {{ $fullName }}
   labels:
     {{- include "memos.labels" . | nindent 4 }}
 spec:
@@ -14,8 +15,9 @@ spec:
       {{- include "memos.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/settings: {{ include (print $.Template.BasePath "/settings.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -32,10 +34,27 @@ spec:
         - name: memos-data
         {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ .Values.persistence.existPersistClaim | default (include "memos.fullname" .) }}
+            claimName: {{ .Values.persistence.existPersistClaim | default ($fullName) }}
         {{- else }}
           emptyDir: { }
-        {{ end }}
+        {{- end }}
+        {{- range $key, $section := .Values.settings }}
+        {{- $hasConfig := and (hasKey $section "config") (not (empty $section.config)) }}
+        {{- $hasSecret := and (hasKey $section "existingSecret") (not (empty $section.existingSecret)) }}
+        {{- if or $hasConfig $hasSecret }}
+        - name: setting-{{ $key }}
+        {{- if $section.config }}
+          configMap:
+            name: {{ $fullName -}}-{{- $key }}
+        {{- else if $section.existingSecret }}
+          secret:
+            secretName: {{ $section.existingSecret }}
+        {{- end }}
+            items:
+              - key: setting
+                path: setting
+        {{- end }}
+        {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -57,10 +76,44 @@ spec:
           volumeMounts:
             - name: memos-data
               mountPath: /var/opt/memos
+            {{- range $key, $section := .Values.settings }}
+            {{- $hasConfig := and (hasKey $section "config") (not (empty $section.config)) }}
+            {{- $hasSecret := and (hasKey $section "existingSecret") (not (empty $section.existingSecret)) }}
+            {{- if or $hasConfig $hasSecret }}
+            {{- $fn := "" -}}
+            {{- if hasPrefix "idp-" $key -}}
+              {{- $fn = printf "memos-%s.json" $key -}}
+            {{- else -}}
+              {{- $fn = printf "memos-instance-setting-%s.json" $key -}}
+            {{- end }}
+            - name: setting-{{ $key }}
+              mountPath: /etc/secrets/{{- $fn }}
+              subPath: setting
+              readOnly: true
+            {{- end }}
+            {{- end }}
           # avoid * cannot parse 'Port' as int: strconv.ParseInt: parsing "tcp://10.233.40.219:5230": invalid syntax
           env:
             - name: MEMOS_PORT
               value: "{{ .Values.service.port }}"
+            - name: MEMOS_LOG_LEVEL
+              value: {{ .Values.instance.logLevel | quote }}
+            - name: MEMOS_DRIVER
+              value: {{ .Values.database.driver | quote }}
+            {{- if .Values.database.existingSecret }}
+            - name: MEMOS_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret.name }}
+                  key: {{ .Values.database.existingSecret.key }}
+            {{- else if .Values.database.connectionString }}
+            - name: MEMOS_DSN
+              value: {{ .Values.database.connectionString | quote }}
+            {{- end }}
+            {{- if .Values.instance.url }}
+            - name: MEMOS_INSTANCE_URL
+              value: {{ .Values.instance.url }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
