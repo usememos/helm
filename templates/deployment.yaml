@@ -108,7 +108,7 @@ spec:
                   key: {{ .Values.database.existingSecret.key }}
             {{- else if .Values.database.connectionString }}
             - name: MEMOS_DSN
-              value: {{ .Values.database.connectionString }}
+              value: {{ .Values.database.connectionString | quote }}
             {{- end }}
             {{- if .Values.instance.url }}
             - name: MEMOS_INSTANCE_URL
