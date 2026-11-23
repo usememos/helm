@@ -1,68 +1,46 @@
-## Install Steps
+# Memos Helm chart
 
-example
+The Helm chart for running [Memos](https://github.com/usememos/memos) on Kubernetes.
 
-```shell
-helm install memos .
+```bash
+helm install memos oci://ghcr.io/usememos/charts/memos --namespace memos --create-namespace
 ```
 
-use custom `namespace` example
+The [chart README](charts/memos/README.md) covers databases, declarative configuration, ingress, upgrades, and every value.
 
-```shell
-helm install memos -n app .
+## Repository layout
+
+| Path | Holds |
+| --- | --- |
+| `charts/memos/` | The chart: templates, `values.yaml`, and `values.schema.json` |
+| `charts/memos/ci/` | Values files that CI installs on a kind cluster; `ci/render/` is rendered and validated only |
+| `scripts/validate.sh` | Lint, render, and schema validation, the same checks CI runs |
+| `.github/workflows/` | `ci.yml` for pull requests, `release.yml` for publishing |
+
+## Working on the chart
+
+With [Helm](https://helm.sh) and [kubeconform](https://github.com/yannh/kubeconform) installed:
+
+```bash
+scripts/validate.sh
 ```
 
-## Requirements
+To try a change on a cluster:
 
-- Kubernetes 1.19+
-- Helm 3.0+
-
-## Configuration
-
-### Image Configuration
-
-The default image tag uses the chart's `appVersion`. To use a different version:
-
-```yaml
-image:
-  tag: "0.25.2"  # Specify a different version
+```bash
+helm upgrade --install memos charts/memos --namespace memos --create-namespace --wait
 ```
 
-## Persistence
-
-Edit `values.yaml`
-
-```yaml
-persistence:
-  ## If enabled is False, emptyDir will be used, data may be lost after Pod rebuild, it is recommended to use persistent volume
-  enabled: false
-  storageClass: "local"
-  existPersistClaim: ""
-  accessMode: ReadWriteOnce
-  size: 10Gi
+```bash
+helm test memos --namespace memos
 ```
 
-when `enabled` is `false` use `emptyDir`,
-1. If has created `pvc`, Please change `enabled` to `true`, and change`existPersistClaim`to your `pvc` name.
-2. If `enabled` is `true` but `existPersistClaim` is empty,if will create a new `pvc` by `accessMode` `storageClass` `size`
+When a change adds or renames a value, update `values.yaml`, `values.schema.json`, and the values table in the chart README together.
 
-## Security
+## Releasing
 
-The chart includes secure defaults:
-- Runs as non-root user (UID 1000)
-- Drops all capabilities
-- No privilege escalation allowed
+1. Set `version` in `charts/memos/Chart.yaml`, following SemVer. For a new Memos release, set `appVersion` too.
+2. Add the version to `CHANGELOG.md`.
+3. Push a tag equal to the chart version, such as `1.0.0`.
 
-## Resources
-
-Default resource limits are configured. Adjust in `values.yaml` based on your workload:
-
-```yaml
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
-```
+The release workflow publishes the chart to `oci://ghcr.io/usememos/charts/memos` and attaches the package to a GitHub release.

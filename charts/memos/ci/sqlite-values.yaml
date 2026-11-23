@@ -1,0 +1,4 @@
+# Defaults: SQLite on a chart-managed volume.
+persistence:
+  size: 1Gi
+  retain: false

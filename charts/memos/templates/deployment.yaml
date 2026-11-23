@@ -1,0 +1,169 @@
+{{- include "memos.validate" . -}}
+{{- $databaseSecret := include "memos.databaseSecretName" . -}}
+{{- $hasConfig := include "memos.hasConfig" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "memos.fullname" . }}
+  labels:
+    {{- include "memos.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    {{- if .Values.strategy }}
+    {{- toYaml .Values.strategy | nindent 4 }}
+    {{- else if or (eq .Values.database.driver "sqlite") .Values.persistence.enabled }}
+    type: Recreate
+    {{- else }}
+    type: RollingUpdate
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "memos.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- /* Memos reads the connection string and the configuration files only at startup. */}}
+      {{- if or .Values.database.dsn .Values.config.files .Values.podAnnotations }}
+      annotations:
+        {{- if .Values.database.dsn }}
+        checksum/database: {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if .Values.config.files }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      labels:
+        {{- include "memos.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "memos.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      {{- /* A Service named memos would otherwise inject MEMOS_PORT=tcp://… into the pod. */}}
+      enableServiceLinks: false
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: memos
+          image: {{ include "memos.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          env:
+            - name: MEMOS_PORT
+              value: "5230"
+            - name: MEMOS_DATA
+              value: /var/opt/memos
+            - name: MEMOS_DRIVER
+              value: {{ .Values.database.driver | quote }}
+            {{- if $databaseSecret }}
+            - name: MEMOS_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $databaseSecret }}
+                  key: {{ if .Values.database.existingSecret.name }}{{ .Values.database.existingSecret.key }}{{ else }}dsn{{ end }}
+            {{- end }}
+            {{- with .Values.instanceUrl }}
+            - name: MEMOS_INSTANCE_URL
+              value: {{ . | quote }}
+            {{- end }}
+            - name: MEMOS_CONFIG_APPLY
+              value: {{ .Values.config.apply | quote }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.extraEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 5230
+              protocol: TCP
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/opt/memos
+            - name: tmp
+              mountPath: /tmp
+            {{- if $hasConfig }}
+            - name: config
+              mountPath: /etc/memos/config
+              readOnly: true
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "memos.claimName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: tmp
+          emptyDir: {}
+        {{- if $hasConfig }}
+        - name: config
+          projected:
+            sources:
+              {{- if .Values.config.files }}
+              - configMap:
+                  name: {{ include "memos.fullname" . }}-config
+              {{- end }}
+              {{- with .Values.config.existingConfigMap }}
+              - configMap:
+                  name: {{ . }}
+              {{- end }}
+              {{- with .Values.config.existingSecret }}
+              - secret:
+                  name: {{ . }}
+              {{- end }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

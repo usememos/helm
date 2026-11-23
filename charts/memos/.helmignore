@@ -1,0 +1,14 @@
+# Patterns to ignore when building packages. Shell glob matching, relative path
+# matching, and negation (prefixed with !) are supported, one pattern per line.
+.DS_Store
+.git/
+.gitignore
+*.swp
+*.bak
+*.tmp
+*.orig
+*~
+.idea/
+.vscode/
+# Values and manifests used only by CI.
+ci/
