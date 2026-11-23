@@ -11,7 +11,11 @@ This chart runs [Memos](https://github.com/usememos/memos) on Kubernetes.
 ## Install
 
 ```bash
-helm install memos oci://ghcr.io/usememos/charts/memos --namespace memos --create-namespace
+git clone https://github.com/usememos/helm.git
+```
+
+```bash
+helm install memos helm/charts/memos --namespace memos --create-namespace
 ```
 
 With the defaults you get one Memos pod using SQLite, a 10Gi volume for its data, and a `ClusterIP` service on port 5230. Reach it with a port-forward and create the first account:
@@ -20,7 +24,7 @@ With the defaults you get one Memos pod using SQLite, a 10Gi volume for its data
 kubectl port-forward service/memos 5230:5230 --namespace memos
 ```
 
-Requirements: Kubernetes 1.25 or later, and Helm 3.8 or later (Helm 4 works too).
+Requirements: Kubernetes 1.25 or later, and Helm 3 or Helm 4.
 
 ## What the chart sets up
 
@@ -143,7 +147,7 @@ The chart-managed claim carries `helm.sh/resource-policy: keep`, so `helm uninst
 
 ## Upgrading Memos
 
-Each chart version defaults to one Memos release, shown as `appVersion`. Upgrade the chart to move to a newer release, or pin another one with `image.tag`. Memos migrates its database at startup, and the startup probe allows five minutes for it.
+Each chart version defaults to one Memos release, shown as `appVersion`. Pull this repository and run `helm upgrade` to move to a newer release, or pin another one with `image.tag`. Memos migrates its database at startup, and the startup probe allows five minutes for it.
 
 Coming from a Memos release before v0.31.0, run v0.31.0 once first; see the [upgrade requirements](https://github.com/usememos/memos/blob/main/store/migration/README.md).
 

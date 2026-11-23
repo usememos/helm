@@ -2,13 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-11-23
 
 A rewrite for Memos 26.11. Several values are renamed and the old names are rejected; see
 [Upgrading from chart 0.2](charts/memos/README.md#upgrading-from-chart-02).
 
 ### Changed
-- **BREAKING**: The chart moved to `charts/memos/` and is published to `oci://ghcr.io/usememos/charts/memos`.
+- **BREAKING**: The chart moved to `charts/memos/`.
 - **BREAKING**: `image.repo` and `image.imageName` became `image.repository`; `image.tag` defaults to the chart `appVersion` instead of `latest`.
 - **BREAKING**: `persistence.existPersistClaim` became `persistence.existingClaim`, `persistence.accessMode` became the list `persistence.accessModes`, `persistence.storageClass` defaults to the cluster default instead of `local`, and persistence is on by default.
 - **BREAKING**: The pod runs as UID and GID 10001, the user of the current image, instead of 1000.
@@ -29,7 +29,6 @@ A rewrite for Memos 26.11. Several values are renamed and the old names are reje
 - `values.schema.json`, which rejects unknown and misspelled values.
 - `podLabels`, `service.annotations`, `service.nodePort`, `strategy`, `priorityClassName`, and `topologySpreadConstraints`.
 - CI that lints and renders with Helm 3 and Helm 4, validates against Kubernetes schemas, and installs the chart on kind with SQLite, declarative configuration, and PostgreSQL.
-- A release workflow that publishes on a version tag.
 
 ### Removed
 - **BREAKING**: `autoscaling` and the HorizontalPodAutoscaler. Set `replicaCount`; SQLite supports one replica.

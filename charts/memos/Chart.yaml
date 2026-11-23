@@ -28,12 +28,3 @@ keywords:
 maintainers:
   - name: usememos
     url: https://github.com/usememos
-annotations:
-  artifacthub.io/license: MIT
-  artifacthub.io/links: |
-    - name: Documentation
-      url: https://usememos.com/docs/deploy/kubernetes
-    - name: Declarative configuration
-      url: https://usememos.com/docs/configuration/declarative-configuration
-    - name: Changelog
-      url: https://github.com/usememos/helm/blob/main/CHANGELOG.md

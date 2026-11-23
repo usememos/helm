@@ -3,7 +3,11 @@
 The Helm chart for running [Memos](https://github.com/usememos/memos) on Kubernetes.
 
 ```bash
-helm install memos oci://ghcr.io/usememos/charts/memos --namespace memos --create-namespace
+git clone https://github.com/usememos/helm.git
+```
+
+```bash
+helm install memos helm/charts/memos --namespace memos --create-namespace
 ```
 
 The [chart README](charts/memos/README.md) covers databases, declarative configuration, ingress, upgrades, and every value.
@@ -15,7 +19,7 @@ The [chart README](charts/memos/README.md) covers databases, declarative configu
 | `charts/memos/` | The chart: templates, `values.yaml`, and `values.schema.json` |
 | `charts/memos/ci/` | Values files that CI installs on a kind cluster; `ci/render/` is rendered and validated only |
 | `scripts/validate.sh` | Lint, render, and schema validation, the same checks CI runs |
-| `.github/workflows/` | `ci.yml` for pull requests, `release.yml` for publishing |
+| `.github/workflows/ci.yml` | The checks that run on pull requests and on `main` |
 
 ## Working on the chart
 
@@ -37,10 +41,7 @@ helm test memos --namespace memos
 
 When a change adds or renames a value, update `values.yaml`, `values.schema.json`, and the values table in the chart README together.
 
-## Releasing
+## Versions
 
-1. Set `version` in `charts/memos/Chart.yaml`, following SemVer. For a new Memos release, set `appVersion` too.
-2. Add the version to `CHANGELOG.md`.
-3. Push a tag equal to the chart version, such as `1.0.0`.
-
-The release workflow publishes the chart to `oci://ghcr.io/usememos/charts/memos` and attaches the package to a GitHub release.
+The chart is installed from this repository, and `main` is the current version. A change to the chart bumps `version` in
+`charts/memos/Chart.yaml`, following SemVer, and adds an entry to `CHANGELOG.md`. For a new Memos release, set `appVersion` too.
