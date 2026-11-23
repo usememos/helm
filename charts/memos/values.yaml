@@ -1,0 +1,202 @@
+# Default values for the memos chart.
+
+image:
+  repository: ghcr.io/usememos/memos
+  # Image tag. Defaults to the chart appVersion. `stable` follows stable
+  # releases and `canary` follows development builds.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Number of Memos pods. SQLite supports exactly one; run more only with MySQL
+# or PostgreSQL, and with a ReadWriteMany volume or object storage for attachments.
+replicaCount: 1
+
+# Canonical external URL of the instance, such as https://memos.example.com.
+# Sets MEMOS_INSTANCE_URL.
+instanceUrl: ""
+
+database:
+  # One of sqlite, mysql, postgres. SQLite keeps the database file on the data volume.
+  driver: sqlite
+  # Connection string for mysql or postgres. The chart stores it in a Secret.
+  #   postgres: postgres://user:password@host:5432/memos?sslmode=disable
+  #   mysql:    user:password@tcp(host:3306)/memos
+  dsn: ""
+  # Read the connection string from a Secret you manage instead of `dsn`.
+  existingSecret:
+    name: ""
+    key: dsn
+
+# Declarative configuration: instance settings, identity providers, and bootstrap
+# users as JSON files in /etc/memos/config.
+# https://usememos.com/docs/configuration/declarative-configuration
+config:
+  # startup applies the files before Memos serves requests; off leaves it to
+  # `memos config apply`.
+  apply: startup
+  # Files rendered into a ConfigMap. Each key is a file name ending in .json and
+  # each value is the document, as YAML or as a JSON string. Keep secrets out of
+  # the values: reference them as ${env:NAME} and supply NAME through extraEnv.
+  files: {}
+  #  instance.json:
+  #    instanceSettings:
+  #      - name: instance/settings/GENERAL
+  #        generalSetting:
+  #          disallowUserRegistration: true
+  #    users:
+  #      - name: users/admin
+  #        username: admin
+  #        role: ADMIN
+  #        password: ${env:MEMOS_ADMIN_PASSWORD}
+  #    lifecycle:
+  #      - resource: users/admin
+  #        preventDestroy: true
+  #        writeOnlyVersion: 1
+  # Existing ConfigMap and Secret whose keys are added to the same directory.
+  existingConfigMap: ""
+  existingSecret: ""
+
+# Extra environment variables, for other MEMOS_* settings and for the values
+# that ${env:NAME} references in the configuration files resolve to.
+extraEnv: []
+#  - name: MEMOS_ADMIN_PASSWORD
+#    valueFrom:
+#      secretKeyRef:
+#        name: memos-admin
+#        key: password
+extraEnvFrom: []
+
+# Data volume mounted at /var/opt/memos. It holds the SQLite database and
+# locally stored attachments. Without it the data lives in an emptyDir and is
+# lost when the pod is rescheduled.
+persistence:
+  enabled: true
+  # Use a claim you manage instead of creating one.
+  existingClaim: ""
+  # Empty uses the cluster's default storage class.
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  annotations: {}
+  # Keep the claim when the release is uninstalled. Installing the release
+  # again under the same name and namespace picks it back up.
+  retain: true
+
+serviceAccount:
+  create: true
+  # Memos does not call the Kubernetes API, so no token is mounted.
+  automount: false
+  annotations: {}
+  # Defaults to the release's full name when `create` is true, else `default`.
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+# The image's user and group are 10001.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 5230
+  # Fixed node port for NodePort and LoadBalancer services.
+  nodePort: null
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: memos.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: memos-tls
+  #    hosts:
+  #      - memos.example.com
+
+# Gateway API route, for clusters that expose services through a Gateway.
+httpRoute:
+  enabled: false
+  annotations: {}
+  # Gateways the route attaches to.
+  parentRefs: []
+  #  - name: gateway
+  #    namespace: gateway-system
+  #    sectionName: https
+  hostnames: []
+  #  - memos.example.com
+  matches:
+    - path:
+        type: PathPrefix
+        value: /
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  # limits:
+  #   memory: 512Mi
+
+# Probes. /healthz reports ready only while the database answers. The startup
+# probe leaves room for database migrations after an upgrade.
+startupProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  periodSeconds: 5
+  failureThreshold: 60
+livenessProbe:
+  tcpSocket:
+    port: http
+  periodSeconds: 20
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Deployment update strategy. When empty the chart uses Recreate for SQLite or a
+# chart-managed volume, so two pods never open the same database file or wait on
+# the same volume, and RollingUpdate otherwise.
+strategy: {}
+
+terminationGracePeriodSeconds: 30
+priorityClassName: ""
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+
+extraVolumes: []
+extraVolumeMounts: []
+
+# Image for the `helm test` pod, which requests /healthz through the Service.
+tests:
+  image:
+    repository: busybox
+    tag: "1.37"

@@ -1,0 +1,45 @@
+Memos {{ .Values.image.tag | default .Chart.AppVersion }} is installed as release {{ .Release.Name }} in namespace {{ .Release.Namespace }}.
+
+Open Memos:
+{{- if .Values.instanceUrl }}
+
+  {{ .Values.instanceUrl }}
+{{- else if .Values.ingress.enabled }}
+{{- range $host := .Values.ingress.hosts }}
+{{- range .paths }}
+
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+{{- end }}
+{{- end }}
+{{- else if .Values.httpRoute.enabled }}
+{{- range .Values.httpRoute.hostnames }}
+
+  https://{{ . }}
+{{- end }}
+{{- else if eq .Values.service.type "NodePort" }}
+
+  export NODE_PORT=$(kubectl get service {{ include "memos.fullname" . }} --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}")
+  export NODE_IP=$(kubectl get nodes -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if eq .Values.service.type "LoadBalancer" }}
+
+  The load balancer address can take a few minutes to appear:
+
+  kubectl get service {{ include "memos.fullname" . }} --namespace {{ .Release.Namespace }} --watch
+{{- else }}
+
+  kubectl port-forward service/{{ include "memos.fullname" . }} 5230:{{ .Values.service.port }} --namespace {{ .Release.Namespace }}
+
+  Then visit http://localhost:5230
+{{- end }}
+{{- if not .Values.instanceUrl }}
+
+Set instanceUrl to the address people use to reach Memos once it sits behind a proxy.
+{{- end }}
+{{- if not .Values.persistence.enabled }}
+
+WARNING: persistence is disabled. Everything Memos keeps in /var/opt/memos is lost when the pod is rescheduled.
+{{- else if and .Values.persistence.retain (not .Values.persistence.existingClaim) }}
+
+The data volume claim {{ include "memos.fullname" . }} is kept when this release is uninstalled.
+{{- end }}

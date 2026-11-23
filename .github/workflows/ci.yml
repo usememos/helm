@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  KUBECONFORM_VERSION: v0.8.0
+
+jobs:
+  validate:
+    name: Lint and render (Helm ${{ matrix.helm }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        helm: [v3.22.1, v4.3.2]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: azure/setup-helm@v5
+        with:
+          version: ${{ matrix.helm }}
+
+      - name: Install kubeconform
+        run: |
+          curl -fsSL "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" |
+            sudo tar -xz -C /usr/local/bin kubeconform
+
+      - name: Lint, render, and validate
+        run: scripts/validate.sh
+
+  install:
+    name: Install on kind (${{ matrix.values }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        values: [sqlite, config, postgres]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: azure/setup-helm@v5
+        with:
+          version: v4.3.2
+
+      - uses: helm/kind-action@v1
+
+      - name: Start PostgreSQL
+        if: matrix.values == 'postgres'
+        run: |
+          kubectl apply -f charts/memos/ci/manifests/postgres.yaml
+          kubectl rollout status deployment/postgres --timeout=180s
+
+      - name: Install the chart
+        run: |
+          helm install memos charts/memos \
+            --values "charts/memos/ci/${{ matrix.values }}-values.yaml" \
+            --wait --timeout 5m
+
+      - name: Run the chart test
+        run: helm test memos --logs
+
+      - name: Show state on failure
+        if: failure()
+        run: |
+          kubectl get all,pvc,ingress,configmap
+          kubectl describe pods
+          kubectl logs --selector app.kubernetes.io/name=memos --tail=200 || true

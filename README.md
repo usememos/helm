@@ -1,68 +1,47 @@
-## Install Steps
+# Memos Helm chart
 
-example
+The Helm chart for running [Memos](https://github.com/usememos/memos) on Kubernetes.
 
-```shell
-helm install memos .
+```bash
+git clone https://github.com/usememos/helm.git
 ```
 
-use custom `namespace` example
-
-```shell
-helm install memos -n app .
+```bash
+helm install memos helm/charts/memos --namespace memos --create-namespace
 ```
 
-## Requirements
+The [chart README](charts/memos/README.md) covers databases, declarative configuration, ingress, upgrades, and every value.
 
-- Kubernetes 1.19+
-- Helm 3.0+
+## Repository layout
 
-## Configuration
+| Path | Holds |
+| --- | --- |
+| `charts/memos/` | The chart: templates, `values.yaml`, and `values.schema.json` |
+| `charts/memos/ci/` | Values files that CI installs on a kind cluster; `ci/render/` is rendered and validated only |
+| `scripts/validate.sh` | Lint, render, and schema validation, the same checks CI runs |
+| `.github/workflows/ci.yml` | The checks that run on pull requests and on `main` |
 
-### Image Configuration
+## Working on the chart
 
-The default image tag uses the chart's `appVersion`. To use a different version:
+With [Helm](https://helm.sh) and [kubeconform](https://github.com/yannh/kubeconform) installed:
 
-```yaml
-image:
-  tag: "0.25.2"  # Specify a different version
+```bash
+scripts/validate.sh
 ```
 
-## Persistence
+To try a change on a cluster:
 
-Edit `values.yaml`
-
-```yaml
-persistence:
-  ## If enabled is False, emptyDir will be used, data may be lost after Pod rebuild, it is recommended to use persistent volume
-  enabled: false
-  storageClass: "local"
-  existPersistClaim: ""
-  accessMode: ReadWriteOnce
-  size: 10Gi
+```bash
+helm upgrade --install memos charts/memos --namespace memos --create-namespace --wait
 ```
 
-when `enabled` is `false` use `emptyDir`,
-1. If has created `pvc`, Please change `enabled` to `true`, and change`existPersistClaim`to your `pvc` name.
-2. If `enabled` is `true` but `existPersistClaim` is empty,if will create a new `pvc` by `accessMode` `storageClass` `size`
-
-## Security
-
-The chart includes secure defaults:
-- Runs as non-root user (UID 1000)
-- Drops all capabilities
-- No privilege escalation allowed
-
-## Resources
-
-Default resource limits are configured. Adjust in `values.yaml` based on your workload:
-
-```yaml
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
+```bash
+helm test memos --namespace memos
 ```
+
+When a change adds or renames a value, update `values.yaml`, `values.schema.json`, and the values table in the chart README together.
+
+## Versions
+
+The chart is installed from this repository, and `main` is the current version. A change to the chart bumps `version` in
+`charts/memos/Chart.yaml`, following SemVer, and adds an entry to `CHANGELOG.md`. For a new Memos release, set `appVersion` too.

@@ -1,0 +1,6 @@
+# PostgreSQL from ci/manifests/postgres.yaml, without a data volume.
+database:
+  driver: postgres
+  dsn: postgres://memos:memos@postgres:5432/memos?sslmode=disable
+persistence:
+  enabled: false

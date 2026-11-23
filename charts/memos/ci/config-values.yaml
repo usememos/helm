@@ -1,0 +1,34 @@
+# Declarative configuration with a bootstrap administrator and a secret reference.
+persistence:
+  size: 1Gi
+  retain: false
+instanceUrl: https://memos.example.com
+config:
+  files:
+    instance.json:
+      instanceSettings:
+        - name: instance/settings/ACCESS
+          accessSetting:
+            accessMode: INSTANCE_ACCESS_MODE_PRIVATE
+        - name: instance/settings/GENERAL
+          generalSetting:
+            disallowUserRegistration: true
+      users:
+        - name: users/admin
+          username: admin
+          role: ADMIN
+          password: ${env:MEMOS_ADMIN_PASSWORD}
+      lifecycle:
+        - resource: users/admin
+          preventDestroy: true
+          writeOnlyVersion: 1
+extraEnv:
+  - name: MEMOS_ADMIN_PASSWORD
+    value: ci-only-password
+ingress:
+  enabled: true
+  hosts:
+    - host: memos.example.com
+      paths:
+        - path: /
+          pathType: Prefix

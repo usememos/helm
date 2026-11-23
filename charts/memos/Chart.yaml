@@ -1,0 +1,30 @@
+apiVersion: v2
+name: memos
+description: >-
+  Memos is an open-source, self-hosted note-taking app that brings your everyday thoughts together in a
+  personal timeline. Your data stays yours, and you choose what to keep private or share.
+type: application
+
+# Chart version, SemVer. Bump it with every change to the chart.
+version: 1.0.0
+
+# Memos release the chart deploys by default. Memos uses CalVer (YY.MM.N), and
+# the image tag defaults to this value.
+appVersion: "26.11.2"
+
+kubeVersion: ">=1.25.0-0"
+
+home: https://usememos.com
+icon: https://raw.githubusercontent.com/usememos/.github/main/assets/brand/mark.svg
+sources:
+  - https://github.com/usememos/memos
+  - https://github.com/usememos/helm
+keywords:
+  - memos
+  - notes
+  - note-taking
+  - markdown
+  - self-hosted
+maintainers:
+  - name: usememos
+    url: https://github.com/usememos

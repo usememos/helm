@@ -1,0 +1,25 @@
+# Rendered but not installed: needs the Gateway API CRDs and an external database.
+replicaCount: 2
+database:
+  driver: mysql
+  existingSecret:
+    name: memos-database
+    key: connection-string
+persistence:
+  existingClaim: memos-shared
+  accessModes:
+    - ReadWriteMany
+config:
+  apply: "off"
+  existingConfigMap: memos-config
+  existingSecret: memos-config-secrets
+httpRoute:
+  enabled: true
+  parentRefs:
+    - name: gateway
+      namespace: gateway-system
+  hostnames:
+    - memos.example.com
+service:
+  type: NodePort
+  nodePort: 30230

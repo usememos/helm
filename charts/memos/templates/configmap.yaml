@@ -1,0 +1,17 @@
+{{- if .Values.config.files }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "memos.fullname" . }}-config
+  labels:
+    {{- include "memos.labels" . | nindent 4 }}
+data:
+  {{- range $name, $content := .Values.config.files }}
+  {{ $name }}: |
+    {{- if kindIs "string" $content }}
+    {{- $content | trim | nindent 4 }}
+    {{- else }}
+    {{- $content | mustToPrettyJson | nindent 4 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
